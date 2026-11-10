@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>نظام حصر وتأكيد بيانات العائلة</title>
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="theme-color" content="#0b2a55">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5f9;--card:#fff;--ink:#14243f;--muted:#5d6b80;--line:#e1e8f1;--navy:#0b2a55;--acc:#124789;--acc-h:#0b2a55;--acc2:#e6eef8;--sky:#0096d5;--sky2:#e3f4fb;--warn:#b3261e;--warn2:#fdecea;--pend:#8a5a00;--pend2:#fbf1dc;--shadow:0 8px 28px rgba(11,42,85,.09)}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1322;--card:#132036;--ink:#e6edf6;--muted:#9aabc2;--line:#22344f;--acc:#5aa2ec;--acc-h:#78b4f0;--acc2:#1a2f4d;--sky:#3fb6ec;--sky2:#123349;--warn:#ff8a80;--warn2:#3a1b1a;--pend:#f0c46a;--pend2:#3a2f17;--shadow:0 8px 28px rgba(0,0,0,.35)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Tajawal","Segoe UI",Tahoma,sans-serif;line-height:1.65;font-size:16px}
+.hero{background:radial-gradient(circle at 15% 20%,rgba(0,150,213,.45),transparent 45%),radial-gradient(circle at 90% 80%,rgba(0,150,213,.25),transparent 40%),linear-gradient(160deg,#0b2a55 0%,#124789 100%);color:#fff;padding:22px 16px 70px;text-align:center;position:relative}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,transparent,#0096d5,transparent)}
+.logo{max-width:380px;margin:0 auto 14px;background:#fff;border-radius:18px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.logo img{display:block;width:100%;height:auto;border-radius:12px}
+h1{font-family:"Amiri",serif;font-size:1.65rem;margin:0;letter-spacing:.3px;font-weight:700}
+.sub{color:#cfe0f3;font-size:.92rem;margin:4px auto 0;max-width:420px}
+.wrap{max-width:500px;margin:-48px auto 0;padding:0 16px 24px;position:relative}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card.main{border-top:4px solid var(--sky)}
+.card-title{font-weight:800;color:var(--acc);font-size:1.05rem;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+.card-title::before{content:"";width:6px;height:20px;border-radius:3px;background:linear-gradient(var(--sky),var(--acc))}
+label{display:block;font-size:.86rem;color:var(--muted);margin:12px 0 5px;font-weight:500}
+input,select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:1rem;background:var(--bg);color:var(--ink);font-family:inherit;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(0,150,213,.18)}
+button{width:100%;margin-top:16px;padding:13px;border:0;border-radius:12px;background:linear-gradient(160deg,#124789,#0b2a55);color:#fff;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 6px 16px rgba(11,42,85,.25);transition:transform .1s,box-shadow .15s}
+button:hover{box-shadow:0 8px 20px rgba(11,42,85,.35)}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.6;cursor:wait}
+button.sec2{background:var(--card);border:1px solid var(--warn);color:var(--warn);box-shadow:none}
+.btns{display:flex;gap:10px}.btns button{margin-top:12px}
+.err{color:var(--warn);font-size:.9rem;margin-top:8px;min-height:1.2em}
+.err:empty{min-height:0;margin:0}
+.hint{font-size:.85rem;color:var(--muted)}
+.me{border:1px solid var(--acc);border-top:4px solid var(--acc)}
+.tag{display:inline-block;background:var(--acc2);color:var(--acc);border-radius:20px;padding:1px 11px;font-size:.78rem;font-weight:700;margin:0 0 4px 4px}
+.tag.edit{background:var(--sky2);color:var(--sky)}
+.tag.pend{background:var(--pend2);color:var(--pend)}
+.tag.no{background:var(--warn2);color:var(--warn)}
+.phead{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.av{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:1.15rem;color:#fff;background:linear-gradient(150deg,#0096d5,#124789)}
+.av.fem{background:linear-gradient(150deg,#5aa2ec,#2a5ea8)}
+.name{font-weight:800;font-size:1.05rem;line-height:1.35}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.f{background:var(--bg);border-radius:10px;padding:7px 10px}
+.f small{display:block;color:var(--muted);font-size:.75rem}
+.f b{font-weight:700;font-size:.92rem}
+.editbox{border-top:1px dashed var(--line);margin-top:12px;padding-top:2px}
+button.edit-btn{background:var(--card);color:var(--acc);border:1.5px solid var(--acc);box-shadow:none;margin-top:12px;padding:10px}
+button.edit-btn:hover{background:var(--acc2);box-shadow:none}
+.sec{font-weight:800;margin:26px 0 4px;font-size:1.05rem;color:var(--acc);display:flex;align-items:center;gap:10px}
+.sec::after{content:"";flex:1;height:1px;background:linear-gradient(270deg,var(--line),transparent)}
+.ok{background:var(--sky2);color:var(--acc);padding:10px;border-radius:10px;margin-top:10px;text-align:center;font-weight:700}
+.link{background:none;color:var(--acc);margin-top:8px;font-weight:600;box-shadow:none}
+.link:hover{background:none;box-shadow:none;text-decoration:underline}
+.add-link{border:1.5px dashed var(--sky);color:var(--sky);border-radius:12px;padding:12px}
+.hidden{display:none!important}
+.note{background:var(--pend2);color:var(--pend);border-radius:12px;padding:10px 12px;font-size:.88rem;margin-top:10px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.stat{background:var(--bg);border-radius:12px;padding:10px 6px;text-align:center}
+.stat b{display:block;font-size:1.5rem;font-weight:800;color:var(--acc);line-height:1.2}
+.stat small{color:var(--muted);font-size:.78rem}
+.empty{background:var(--card);border:1.5px dashed var(--line);border-radius:14px;padding:18px;text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:12px}
+.row{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;padding:6px 0;border-bottom:1px dashed var(--line)}
+.row span:first-child{color:var(--muted)}
+.row span:last-child{font-weight:700}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px;background:var(--bg);padding:5px;border-radius:14px}
+.tab{margin:0;padding:9px 4px;border-radius:10px;background:transparent;color:var(--muted);box-shadow:none;font-size:.85rem;font-weight:700}
+.tab:hover{background:var(--acc2);box-shadow:none}
+.tab.on{background:var(--card);color:var(--acc);box-shadow:0 2px 8px rgba(11,42,85,.12)}
+.badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:10px;background:var(--pend2);color:var(--pend);font-size:.75rem}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 4px}
+button.dl{width:auto;margin:0;padding:8px 14px;font-size:.85rem;flex:none;background:var(--card);color:var(--acc);border:1.5px solid var(--acc);box-shadow:none}
+button.dl:hover{background:var(--acc2);box-shadow:none}
+.logi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow)}
+.logi .top{display:flex;justify-content:space-between;gap:8px;font-size:.78rem;color:var(--muted)}
+.logi .who{font-weight:800;margin:3px 0}
+.chg{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.9rem}
+.chg .old{text-decoration:line-through;color:var(--muted)}
+.chg .new{font-weight:800;color:var(--acc)}
+.fam{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+.fam span{background:var(--bg);border-radius:10px;padding:4px 10px;font-size:.82rem}
+.fam span small{color:var(--muted);margin-inline-end:7px;padding-inline-end:7px;border-inline-end:1px solid var(--line);display:inline-block}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.bigc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+.bigc b{display:block;font-size:1.7rem;font-weight:800;color:var(--acc);line-height:1.2}
+.bigc small{color:var(--muted);font-size:.82rem}
+.bar{height:8px;background:var(--bg);border-radius:6px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--sky),var(--acc));border-radius:6px}
+.miss{max-height:320px;overflow:auto;margin-top:8px}
+.miss div{display:flex;justify-content:space-between;padding:6px 2px;border-bottom:1px dashed var(--line);font-size:.88rem}
+.miss div span:last-child{color:var(--muted)}
+.spin{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px}
+.spin.big{width:38px;height:38px;border-width:4px;border-color:var(--acc2);border-top-color:var(--acc);margin-bottom:10px}
+button.edit-btn .spin,button.dl .spin,.link .spin{border-color:var(--acc2);border-top-color:var(--acc)}
+@keyframes sp{to{transform:rotate(360deg)}}
+#loader{position:fixed;inset:0;background:rgba(242,245,249,.75);backdrop-filter:blur(2px);display:grid;place-items:center;z-index:50}
+@media (prefers-color-scheme:dark){#loader{background:rgba(11,19,34,.75)}}
+#loader .ld{text-align:center;color:var(--acc);font-weight:700}
+#loader.hidden{display:none!important}
+textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:1rem;background:var(--bg);color:var(--ink);font-family:inherit;resize:vertical}
+textarea:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(0,150,213,.18)}
+.contact{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.contact .ci{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--sky2);color:var(--sky);font-size:1.1rem}
+@media (max-width:420px){.contact{flex-wrap:wrap}.contact button{width:100%}}
+.note-txt{background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:8px;white-space:pre-wrap;font-size:.92rem}
+.tag.done{background:#e3f4e9;color:#1a7f4b}
+.req{color:var(--warn);font-weight:800}
+footer{text-align:center;padding:18px 16px 28px;color:var(--muted);font-size:.85rem}
+footer .line{width:120px;height:2px;margin:0 auto 10px;background:linear-gradient(90deg,transparent,var(--sky),transparent)}
+footer b{color:var(--acc);font-weight:700}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="logo"><img src="logo.jpg" alt="عائلة مرتجى"></div>
+  <h1>نظام حصر وتأكيد بيانات العائلة</h1>
+  <div class="sub">لجنة النسب — مراجعة بيانات أفراد العائلة والتأكد من صحتها</div>
+</header>
+<div class="wrap">
+
+  <div id="login" class="card main">
+    <div class="card-title">تسجيل الدخول</div>
+    <div class="hint">أدخل رقم هويتك وسنة ميلادك لعرض بياناتك وبيانات أسرتك.</div>
+    <label for="id">رقم الهوية</label>
+    <input id="id" inputmode="numeric" maxlength="9" autocomplete="off" placeholder="أدخل رقم الهوية المكوّن من 9 أرقام">
+    <label for="yr">سنة الميلاد</label>
+    <input id="yr" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="مثال: 1985">
+    <button id="loginBtn" onclick="login()">تسجيل الدخول</button>
+    <div class="err" id="err"></div>
+    <button class="link" onclick="show('adminLogin')">دخول أعضاء اللجنة</button>
+  </div>
+
+  <div id="contactBox" class="card contact">
+    <div class="ci">✉</div>
+    <div style="flex:1"><b>هل تواجه مشكلة؟</b><div class="hint">لأي خطأ في البيانات، أو فرد ناقص، أو مشكلة في الدخول.</div></div>
+    <button class="dl" onclick="openNote()">تواصل مع لجنة النسب</button>
+  </div>
+
+  <div id="note" class="card main hidden">
+    <div class="card-title">تواصل مع لجنة النسب</div>
+    <div class="hint">تصل ملاحظتكم إلى جميع أعضاء لجنة النسب، ويتم التواصل معكم عند الحاجة.</div>
+    <div id="noteForm">
+      <label>الاسم الرباعي</label><input id="nName" placeholder="أدخل الاسم الرباعي">
+      <label>رقم الهوية</label><input id="nId" inputmode="numeric" maxlength="9" placeholder="أدخل رقم الهوية المكوّن من 9 أرقام">
+      <label>رقم الجوال</label><input id="nPh" inputmode="tel" dir="ltr" maxlength="17" placeholder="059xxxxxxx أو +905xxxxxxxxx">
+      <div class="hint">من داخل فلسطين: 05xxxxxxxx — من الخارج: رقم دولي يبدأ بـ +</div>
+      <label>نوع الملاحظة</label>
+      <select id="nType"><option value="">— اختر —</option><option>بيانات خاطئة</option><option>فرد ناقص</option><option>مشكلة في الدخول</option><option>أخرى</option></select>
+      <label>التفاصيل</label><textarea id="nText" rows="5" maxlength="1000" placeholder="اكتب الملاحظة بوضوح، مثل: اسم الشخص، ورقم هويته، والخطأ الموجود."></textarea>
+      <button id="nBtn" onclick="sendNote()">إرسال</button>
+      <div class="err" id="nErr"></div>
+    </div>
+    <div id="noteOk" class="hidden"><div class="ok">تم إرسال ملاحظتكم إلى لجنة النسب بنجاح. شكراً لكم.</div></div>
+    <button class="link" onclick="show('login')">رجوع</button>
+  </div>
+
+  <div id="view" class="hidden">
+    <div id="meCard"></div>
+    <div class="sec">أفراد الأسرة المرتبطون بكم</div>
+    <div class="hint" id="relHint" style="margin-bottom:10px"></div>
+    <div id="rel"></div>
+    <div id="sibBox" class="hidden">
+      <div class="sec">الإخوة (بصفتكم الأخ الأكبر)</div>
+      <div class="hint" style="margin-bottom:10px">نظراً لوفاة الوالد، يمكنكم تعديل الحالة الاجتماعية ورقم الجوال لأخواتكم وإخوتكم غير المتزوجين.</div>
+      <div id="sib"></div>
+    </div>
+    <div id="addBox" class="hidden">
+      <button class="link add-link" onclick="toggleAdd()">+ إضافة فرد غير مدرج</button>
+      <div class="card hidden" id="addForm" style="margin-top:12px">
+        <div class="card-title">إضافة فرد جديد</div>
+        <div class="note">تُعرض الإضافة على لجنة النسب، ولا تُعتمد إلا بعد موافقتها.</div>
+        <label>صلة القرابة</label>
+        <select id="aRel"><option value="زوجة">زوجة</option><option value="ابن">ابن</option><option value="ابنة">ابنة</option></select>
+        <label>رقم الهوية</label><input id="aId" inputmode="numeric" maxlength="9" placeholder="أدخل رقم الهوية المكوّن من 9 أرقام">
+        <label>الاسم الرباعي</label><input id="aName" placeholder="أدخل الاسم الرباعي">
+        <label>تاريخ الميلاد</label><input type="date" id="aDob">
+        <label>الحالة الاجتماعية</label><select id="aSt"></select>
+        <label>مكان الإقامة <span class="req">*</span></label><select id="aRes" onchange="phoneMode($('aPh'),$('aPhH'),this.value)"></select>
+        <label>رقم الهاتف المحمول <span class="hint">(إجباري لمن هم 18 عاماً فأكثر)</span></label><input id="aPh" inputmode="tel" dir="ltr" maxlength="10" placeholder="059xxxxxxx">
+        <div class="hint" id="aPhH">اختر مكان الإقامة أولاً</div>
+        <button id="addBtn" onclick="addMember()">إرسال للاعتماد</button>
+        <div class="err" id="aErr"></div>
+      </div>
+    </div>
+    <button class="link" onclick="logout()">تسجيل الخروج</button>
+  </div>
+
+  <div id="adminLogin" class="card main hidden">
+    <div class="card-title">دخول أعضاء لجنة النسب</div>
+    <label>اسم المستخدم</label><input id="aUser" autocomplete="username">
+    <label>كلمة المرور</label><input id="aPass" type="password" autocomplete="current-password">
+    <button id="adBtn" onclick="adminLogin()">تسجيل الدخول</button>
+    <div class="err" id="adErr"></div>
+    <button class="link" onclick="show('login')">رجوع</button>
+  </div>
+
+  <div id="admin" class="hidden">
+    <div class="card main">
+      <div class="card-title">لوحة لجنة النسب</div>
+      <div class="hint">مرحباً، <b id="adminTitle"></b>.</div>
+      <div class="tabs">
+        <button class="tab on" data-t="adds" onclick="tab('adds')">الإضافات <span class="badge" id="cPend">0</span></button>
+        <button class="tab" data-t="log" onclick="tab('log')">سجل التعديلات</button>
+        <button class="tab" data-t="search" onclick="tab('search')">بحث</button>
+        <button class="tab" data-t="stats" onclick="tab('stats')">الإحصائيات</button>
+        <button class="tab" data-t="notes" onclick="tab('notes')">الملاحظات <span class="badge" id="cNotes">0</span></button>
+      </div>
+      <button class="link" onclick="adminLogout()">تسجيل خروج اللجنة</button>
+    </div>
+
+    <div class="panel" id="p-adds">
+      <div class="toolbar"><span class="hint">إضافات أرباب الأسر. يمكن لأي عضو اعتمادها أو رفضها.</span>
+        <button class="dl" onclick="dlAdds()">تنزيل Excel</button></div>
+      <div class="sec">بانتظار المراجعة</div>
+      <div id="pending"></div>
+      <div class="sec">تمت مراجعتها <span class="hint" id="cDone"></span></div>
+      <div id="done"></div>
+    </div>
+
+    <div class="panel hidden" id="p-log">
+      <div class="toolbar"><span class="hint" id="logInfo">كل تغيير على الحالة الاجتماعية أو رقم الجوال، الأحدث أولاً.</span>
+        <button class="dl" onclick="dlLog()">تنزيل Excel</button></div>
+      <div id="logList"></div>
+    </div>
+
+    <div class="panel hidden" id="p-search">
+      <div class="card">
+        <label for="q">ابحث برقم الهوية أو بجزء من الاسم</label>
+        <input id="q" placeholder="مثال: 4012 أو أحمد محمد">
+        <button id="qBtn" onclick="doSearch()">بحث</button>
+        <div class="err" id="qErr"></div>
+      </div>
+      <div id="results"></div>
+    </div>
+
+    <div class="panel hidden" id="p-notes">
+      <div class="toolbar"><span class="hint">الملاحظات المرسلة من أفراد العائلة. غيّر الحالة واكتب ما تم، ليعرف بقية الأعضاء.</span>
+        <button class="dl" onclick="dlNotes()">تنزيل Excel</button></div>
+      <div id="notesList"></div>
+    </div>
+
+    <div class="panel hidden" id="p-stats">
+      <div id="statsBox"></div>
+    </div>
+  </div>
+</div>
+
+<div id="loader" class="hidden"><div class="ld"><span class="spin big"></span><div>جاري تحميل البيانات…</div></div></div>
+
+<footer><div class="line"></div>تنفيذ: <b>م. محمود إيهاب مرتجى</b></footer>
+
+<script>
+let token=null, adminToken=null, V=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const show=(...ids)=>{["login","view","adminLogin","admin","note"].forEach(x=>$(x).classList.toggle("hidden",!ids.includes(x)));$("contactBox").classList.toggle("hidden",!ids.includes("login"));window.scrollTo(0,0)};
+["id","aId","yr"].forEach(x=>$(x).addEventListener("input",e=>e.target.value=e.target.value.replace(/\D/g,"")));
+function validId(s){if(!/^\d{9}$/.test(s))return false;let t=0;for(let i=0;i<9;i++){let d=+s[i]*(i%2?2:1);t+=d>9?d-9:d}return t%10==0}
+function idMsg(s){if(!/^\d{9}$/.test(s))return"يجب أن يتكون رقم الهوية من 9 أرقام فقط.";if(!validId(s))return"رقم الهوية غير صحيح، يُرجى التأكد منه.";return""}
+
+// استدعاء دوال الخادم
+function busy(btn,on){if(!btn)return;btn.disabled=on;
+  if(on){btn.dataset.t=btn.innerHTML;btn.innerHTML='<span class="spin"></span> جاري التحميل…'}else if(btn.dataset.t){btn.innerHTML=btn.dataset.t}}
+// رابط خادم Google Apps Script (Web App)
+const API_URL="https://script.google.com/macros/s/AKfycby83SDt2iqwyNsZbGilQJmDnfPVwzEz_SGcLFNPqnf3YbqORsdX1-LvX884w0Bo2eBw/exec";
+function call(fn,args,btn,errEl,onOk,onFail){
+  busy(btn,true); if(errEl)errEl.textContent="";
+  const fail=m=>{busy(btn,false);loader(false);
+    m=String(m||"حدث خطأ، يُرجى المحاولة مرة أخرى.").replace(/^(Error|خطأ):\s*/,"");
+    if(/انتهت الجلسة|غير مصرح/.test(m)){clearSess();token=adminToken=null;show("login");$("err").textContent=m;return}
+    if(onFail)onFail(m); else if(errEl)errEl.textContent=m;};
+  // text/plain حتى لا يرسل المتصفح طلب تحقق مسبق (CORS preflight)
+  fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn,args}),credentials:"omit"})
+    .then(r=>r.json())
+    .then(res=>{ if(res&&res.ok){busy(btn,false);onOk(res.data)} else fail(res&&res.error); })
+    .catch(()=>fail("تعذّر الاتصال بالخادم. تأكد من الاتصال بالإنترنت وحاول مرة أخرى."));
+}
+// حفظ الجلسة داخل نفس التبويب، حتى لا يُطلب الدخول عند إعادة تحميل الصفحة.
+// تُمسح عند تسجيل الخروج أو إغلاق التبويب.
+function saveSess(o){try{sessionStorage.setItem("famSess",JSON.stringify(o))}catch(e){}}
+function getSess(){try{return JSON.parse(sessionStorage.getItem("famSess")||"null")}catch(e){return null}}
+function clearSess(){try{sessionStorage.removeItem("famSess")}catch(e){}}
+function loader(on){$("loader").classList.toggle("hidden",!on)}
+function alertBox(m){$("err").textContent=m}
+
+function login(){
+  const id=$("id").value.trim(), yr=$("yr").value.trim(), m=idMsg(id);
+  if(m){$("err").textContent=m;return}
+  if(!/^\d{4}$/.test(yr)){$("err").textContent="يُرجى إدخال سنة الميلاد بأربعة أرقام.";return}
+  call("login",[id,yr],$("loginBtn"),$("err"),r=>{token=r.token;V=r.view;saveSess({t:"u",token});show("view");render()});
+}
+function logout(){clearSess();token=null;V=null;$("id").value="";$("yr").value="";show("login")}
+
+const stOpts=v=>V.statuses.map(x=>`<option${x==v?" selected":""}>${esc(x)}</option>`).join("");
+const fld=(k,v)=>`<div class="f"><small>${k}</small><b dir="auto">${esc(v)||"—"}</b></div>`;
+const INSIDE="داخل غزة - فلسطين",OUTSIDE="خارج فلسطين";
+const phoneClean=v=>String(v||"").replace(/[\s\-()]/g,"").replace(/^00/,"+");
+// يعيد رسالة خطأ أو "" حسب مكان الإقامة
+function phoneMsg(p,res){p=phoneClean(p);if(!p)return"";
+  if(res==OUTSIDE)return /^\+\d{8,15}$/.test(p)?"":"رقم الجوال الدولي يجب أن يبدأ بـ + أو 00 ثم مفتاح الدولة، مثل: +905xxxxxxxxx";
+  return /^05\d{8}$/.test(p)?"":"رقم الجوال يجب أن يتكون من 10 أرقام ويبدأ بـ 05.";}
+// تغيير شكل خانة الجوال حسب مكان الإقامة
+function phoneMode(inp,hint,res){if(!inp)return;const out=res==OUTSIDE;
+  inp.placeholder=out?"+905xxxxxxxxx":"059xxxxxxx";inp.maxLength=out?17:10;inp.dir="ltr";
+  if(hint)hint.textContent=out?"رقم دولي يبدأ بـ + أو 00 ثم مفتاح الدولة":res==INSIDE?"10 أرقام ويبدأ بـ 05":"اختر مكان الإقامة أولاً";}
+const phoneFilter=e=>{e.target.value=e.target.value.replace(/[^\d+]/g,"").replace(/(?!^)\+/g,"")};
+const resOpts=v=>'<option value="">— اختر —</option>'+(V?V.residences:[]).map(x=>`<option${x==v?" selected":""}>${esc(x)}</option>`).join("");
+function editFields(q){
+  return `<button class="edit-btn" id="eb${q.id}" onclick="openEdit('${q.id}')">تعديل البيانات</button><div class="editbox hidden" id="ebox${q.id}"><label>الحالة الاجتماعية</label><select id="st${q.id}">${stOpts(q.st)}</select>
+   <label>مكان الإقامة <span class="req">*</span></label><select id="rs${q.id}" onchange="phoneMode($('ph${q.id}'),$('phh${q.id}'),this.value)">${resOpts(q.res)}</select>
+   <label>رقم الهاتف المحمول${q.minor?" (اختياري)":" <span class=\"req\">*</span>"}</label><input id="ph${q.id}" inputmode="tel" dir="ltr" maxlength="${q.res==OUTSIDE?17:10}" placeholder="${q.res==OUTSIDE?"+905xxxxxxxxx":"059xxxxxxx"}" value="${esc(q.phone)}" oninput="phoneFilter(event)">
+   <div class="hint" id="phh${q.id}">${q.res==OUTSIDE?"رقم دولي يبدأ بـ + أو 00 ثم مفتاح الدولة":q.res==INSIDE?"10 أرقام ويبدأ بـ 05":"اختر مكان الإقامة أولاً"}</div>
+   <button id="sv${q.id}" onclick="save('${q.id}')">حفظ التعديلات</button>
+   <div class="err" id="er${q.id}"></div></div><div class="ok hidden" id="ok${q.id}">تم حفظ البيانات بنجاح</div>`}
+function card(q,isMe){
+  const tags=`<span class="tag">${esc(q.tag)}</span>`+(q.editable&&!isMe?'<span class="tag edit">قابل للتعديل</span>':'')+
+    (q.pending?'<span class="tag pend">بانتظار اعتماد اللجنة</span>':'')+(q.minor?'<span class="tag no">دون 18 عاماً</span>':'');
+  let body=`<div class="phead"><div class="av${q.g=="انثى"?" fem":""}">${esc((q.n||"؟").trim()[0])}</div>
+    <div><div>${tags}</div><div class="name">${esc(q.n)}</div></div></div>
+    <div class="grid">${fld("رقم الهوية",q.id)}${fld("الجنس",q.g)}`;
+  body+=fld("تاريخ الميلاد",q.dob)+fld("الحالة الاجتماعية",q.st)+fld("مكان الإقامة",q.res||"غير محدد")+(q.editable?fld("رقم الجوال",q.phone||"غير مسجّل"):"")+`</div>`;
+  if(isMe&&q.editable&&q.missing) body+=`<div class="note"><b>يُرجى إكمال بياناتك:</b> رقم الجوال ومكان الإقامة مطلوبان.</div>`;
+  if(q.editable) body+=editFields(q);
+  else{
+    if(isMe&&q.minor) body+=`<div class="note">لا يمكن لمن هم دون 18 عاماً تعديل البيانات، ويتولى ذلك ولي الأمر.</div>`;
+  }
+  return `<div class="card${isMe?" me":""}">${body}</div>`;
+}
+function openEdit(id){$("eb"+id).classList.add("hidden");$("ebox"+id).classList.remove("hidden")}
+function render(){
+  $("meCard").innerHTML=card(V.me,true);
+  if(V.me.editable&&V.me.missing)openEdit(V.me.id);
+  $("rel").innerHTML=V.rels.map(q=>card(q)).join("")||'<div class="hint">لا يوجد أفراد مرتبطون.</div>';
+  $("relHint").textContent=V.head?"بصفتكم رب الأسرة، يمكنكم تعديل الحالة الاجتماعية ورقم الجوال للزوجة والبنات والأبناء غير المتزوجين، وإضافة فرد غير مدرج."
+    :V.widow?"نظراً لوفاة الزوج، يمكنكم تعديل الحالة الاجتماعية ورقم الجوال للبنات والأبناء غير المتزوجين."
+    :"تُعرض بيانات أفراد الأسرة للاطلاع فقط.";
+  $("sibBox").classList.toggle("hidden",!V.eldest);
+  $("sib").innerHTML=V.sibs.map(q=>card(q)).join("");
+  $("addBox").classList.toggle("hidden",!V.head);
+  $("aSt").innerHTML=stOpts("اعزب");$("aRes").innerHTML=resOpts("");phoneMode($("aPh"),$("aPhH"),"");
+}
+function save(id){
+  const data={st:$("st"+id).value,phone:$("ph"+id).value.trim(),res:$("rs"+id).value};
+  const q=[V.me,...V.rels,...V.sibs].find(x=>x.id==id);
+  if(!data.phone&&q&&!q.minor){$("er"+id).textContent="رقم الجوال إجباري.";return}
+  if(!data.res){$("er"+id).textContent="يُرجى اختيار مكان الإقامة.";return}
+  const pm=phoneMsg(data.phone,data.res); if(pm){$("er"+id).textContent=pm;return}
+  data.phone=phoneClean(data.phone);
+  const wasHead=V.head;
+  call("saveEdit",[token,id,data],$("sv"+id),$("er"+id),r=>{
+    V=r.view;render();
+    const ok=$("ok"+id); if(ok)ok.classList.remove("hidden");
+    if(!wasHead&&V.head){$("addForm").classList.remove("hidden")}
+  });
+}
+function toggleAdd(){$("addForm").classList.toggle("hidden")}
+function addMember(){
+  const d={rel:$("aRel").value,id:$("aId").value.trim(),name:$("aName").value.trim(),dob:$("aDob").value,st:$("aSt").value,phone:$("aPh").value.trim(),res:$("aRes").value};
+  const e=$("aErr"), m=idMsg(d.id);
+  if(m){e.textContent=m;return}
+  if(d.name.split(/\s+/).length<4){e.textContent="يُرجى إدخال الاسم الرباعي كاملاً.";return}
+  if(!d.dob){e.textContent="يُرجى إدخال تاريخ الميلاد.";return}
+  const adult=(new Date()-new Date(d.dob))/31557600000>=18;
+  if(!d.phone&&adult){e.textContent="رقم الجوال إجباري لمن هم 18 عاماً فأكثر.";return}
+  if(!d.res){e.textContent="يُرجى اختيار مكان الإقامة.";return}
+  const pm=phoneMsg(d.phone,d.res); if(pm){e.textContent=pm;return}
+  d.phone=phoneClean(d.phone);
+  call("addMember",[token,d],$("addBtn"),e,r=>{
+    V=r.view;["aId","aName","aDob","aPh"].forEach(x=>$(x).value="");render();
+    $("addForm").classList.add("hidden");
+  });
+}
+
+// لوحة اللجنة
+function adminLogin(){
+  call("adminLogin",[$("aUser").value.trim(),$("aPass").value],$("adBtn"),$("adErr"),r=>{
+    adminToken=r.token;$("aPass").value="";$("adminTitle").textContent=r.name;saveSess({t:"a",token:r.token,name:r.name,tab:"adds"});show("admin");tab("adds");renderAdmin(r.list);$("cNotes").textContent=r.newNotes||0});
+}
+let ADDS=[],LOG=[],STATS=null;
+function tab(t){
+  const ss=getSess(); if(ss&&ss.t=="a"){ss.tab=t;saveSess(ss)}
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t==t));
+  ["adds","log","search","stats","notes"].forEach(x=>$("p-"+x).classList.toggle("hidden",x!=t));
+  if(t=="adds")call("adminList",[adminToken],null,null,renderAdmin);
+  if(t=="log"){$("logList").innerHTML='<div class="empty">جاري التحميل…</div>';call("adminLog",[adminToken],null,null,renderLog);}
+  if(t=="stats"){$("statsBox").innerHTML='<div class="empty">جاري التحميل…</div>';call("adminStats",[adminToken],null,null,renderStats);}
+  if(t=="search")setTimeout(()=>$("q").focus(),50);
+  if(t=="notes"){$("notesList").innerHTML='<div class="empty">جاري التحميل…</div>';call("adminNotes",[adminToken],null,null,renderNotes);}
+}
+function renderLog(list){
+  LOG=list;$("logInfo").textContent=list.length?`${list.length} تعديل، الأحدث أولاً.`:"كل تغيير على الحالة الاجتماعية أو رقم الجوال، الأحدث أولاً.";
+  $("logList").innerHTML=list.slice(0,300).map(l=>`<div class="logi"><div class="top"><span>${esc(l.field)}</span><span>${esc(l.at)}</span></div>
+   <div class="who">${esc(l.name)} <span class="hint">(${esc(l.id)})</span></div>
+   <div class="chg"><span class="old">${esc(l.from)||"فارغ"}</span><span>←</span><span class="new">${esc(l.to)||"فارغ"}</span></div>
+   <div class="hint" style="margin-top:4px">${l.by==l.id?"عدّلها بنفسه":"عدّلها: "+esc(l.byName)+" ("+esc(l.by)+")"}</div></div>`).join("")
+   ||'<div class="empty">لا توجد تعديلات بعد.</div>';
+}
+function doSearch(){
+  call("adminSearch",[adminToken,$("q").value],$("qBtn"),$("qErr"),list=>{
+    $("results").innerHTML=list.map(p=>`<div class="card"><div class="phead"><div class="av${p.g=="انثى"?" fem":""}">${esc((p.n||"؟")[0])}</div>
+     <div><div>${p.head?'<span class="tag">رب أسرة</span>':''}${p.minor?'<span class="tag no">دون 18 عاماً</span>':''}${p.approval!="معتمد"?'<span class="tag pend">'+esc(p.approval)+'</span>':''}</div>
+     <div class="name">${esc(p.n)}</div></div></div>
+     <div class="grid">${fld("رقم الهوية",p.id)}${fld("تاريخ الميلاد",p.dob)}${fld("الحالة الاجتماعية",p.st+(p.st!=p.st0?" (كانت "+p.st0+")":""))}${fld("رقم الجوال",p.phone)}${fld("مكان الإقامة",p.res||"غير محدد")}
+     ${fld("آخر دخول",p.lastLogin||"لم يدخل بعد")}${fld("آخر تعديل",p.editAt?p.editAt+" — "+p.editBy:"")}</div>
+     <div class="fam">${p.family.map(f=>`<span><small>${esc(f.rel)}</small>${esc(f.n)}</span>`).join("")||'<span class="hint">لا يوجد أفراد مرتبطون</span>'}</div></div>`).join("")
+     ||'<div class="empty">لا توجد نتائج.</div>';
+  });
+}
+function renderStats(s){
+  STATS=s;const pc=(a,b)=>b?Math.round(a*100/b):0;
+  $("statsBox").innerHTML=`<div class="big">
+    <div class="bigc"><b>${s.members}</b><small>إجمالي الأفراد (${s.males} ذكور، ${s.females} إناث)</small></div>
+    <div class="bigc"><b>${s.heads}</b><small>أرباب الأسر</small></div>
+    <div class="bigc"><b>${s.adults}</b><small>البالغون (18 عاماً فأكثر)</small></div>
+    <div class="bigc"><b>${s.minors}</b><small>دون 18 عاماً</small></div></div>
+   <div class="card"><div class="card-title">نسبة المشاركة</div>
+    <div class="row"><span>أرباب الأسر الذين دخلوا</span><span>${s.headsLogged} من ${s.heads} (${pc(s.headsLogged,s.heads)}%)</span></div>
+    <div class="bar"><i style="width:${pc(s.headsLogged,s.heads)}%"></i></div>
+    <div class="row" style="margin-top:10px"><span>البالغون الذين دخلوا</span><span>${s.adultsLogged} من ${s.adults} (${pc(s.adultsLogged,s.adults)}%)</span></div>
+    <div class="bar"><i style="width:${pc(s.adultsLogged,s.adults)}%"></i></div>
+    <div class="row" style="margin-top:10px"><span>أفراد لديهم رقم جوال</span><span>${s.withPhone}</span></div>
+    <div class="row"><span>مقيمون داخل غزة - فلسطين</span><span>${s.inside}</span></div>
+    <div class="row"><span>مقيمون خارج فلسطين</span><span>${s.outside}</span></div>
+    <div class="row"><span>عدد التعديلات</span><span>${s.edits}</span></div>
+    <div class="row"><span>إضافات بانتظار المراجعة</span><span>${s.pending}</span></div></div>
+   <div class="card"><div class="toolbar" style="margin:0"><div class="card-title" style="margin:0">أرباب أسر لم يدخلوا بعد (${s.headsMissing.length})</div>
+    <button class="dl" onclick="dlMissing()">تنزيل Excel</button></div>
+    <div class="miss">${s.headsMissing.map(h=>`<div><span>${esc(h.n)}</span><span>${esc(h.id)}</span></div>`).join("")||'<div class="hint">جميع أرباب الأسر دخلوا 🎉</div>'}</div></div>`;
+}
+// تنزيل CSV يفتح في Excel مع دعم العربية
+function dl(name,head,rows){
+  const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+  const csv="\ufeff"+[head,...rows].map(r=>r.map(q).join(",")).join("\r\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download=name+"-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+}
+// صيغة ="..." تمنع Excel من حذف الصفر الأول في أرقام الجوال
+const tx=v=>v?'="'+v+'"':"";
+function dlAdds(){dl("mortaja-additions",["الصلة","الاسم","رقم الهوية","تاريخ الميلاد","الحالة الاجتماعية","أضافه","رقم هوية المضيف","وقت الإضافة","الحالة","قرار اللجنة بواسطة","وقت القرار"],
+  ADDS.map(a=>[a.rel,a.n,tx(a.id),a.dob,a.st,a.byName,tx(a.by),a.addedAt,a.status,a.who,a.at]))}
+function dlLog(){dl("mortaja-edit-log",["الوقت","الاسم","رقم الهوية","الحقل","القيمة القديمة","القيمة الجديدة","المعدِّل","رقم هوية المعدِّل"],
+  LOG.map(l=>[l.at,l.name,tx(l.id),l.field,tx(l.from),tx(l.to),l.byName,tx(l.by)]))}
+function dlMissing(){dl("mortaja-heads-not-logged-in",["الاسم","رقم الهوية"],STATS.headsMissing.map(h=>[h.n,tx(h.id)]))}
+function adminLogout(){clearSess();adminToken=null;$("aUser").value="";show("login")}
+function addCard(a,actions){
+  const st=a.status=="بانتظار الاعتماد"?'<span class="tag pend">بانتظار المراجعة</span>':a.status=="معتمد"?'<span class="tag">معتمد</span>':'<span class="tag no">مرفوض</span>';
+  return `<div class="card"><div class="phead"><div class="av${a.g=="انثى"?" fem":""}">${esc((a.n||"؟").trim()[0])}</div>
+   <div><div><span class="tag">${esc(a.rel)}</span>${st}</div><div class="name">${esc(a.n)}</div></div></div>
+   <div class="grid">${fld("رقم الهوية",a.id)}${fld("تاريخ الميلاد",a.dob)}${fld("الحالة الاجتماعية",a.st)}${fld("وقت الإضافة",a.addedAt)}</div>
+   <div class="grid" style="grid-template-columns:1fr;margin-top:8px">${fld("أضافه",a.byName+" ("+a.by+")")}
+   ${a.who?fld(a.status=="معتمد"?"اعتمده":"رفضه",a.who+" — "+a.at):""}</div>
+   ${actions?`<div class="btns"><button onclick="decide(this,'${esc(a.id)}',true)">اعتماد</button><button class="sec2" onclick="decide(this,'${esc(a.id)}',false)">رفض</button></div><div class="err" id="de${esc(a.id)}"></div>`:""}</div>`}
+function renderAdmin(list){
+  ADDS=list;
+  const p=list.filter(a=>a.status=="بانتظار الاعتماد"), d=list.filter(a=>a.status!="بانتظار الاعتماد");
+  $("cPend").textContent=p.length;$("cDone").textContent=d.length?`(${d.filter(a=>a.status=="معتمد").length} معتمدة، ${d.filter(a=>a.status=="مرفوض").length} مرفوضة)`:"";
+  $("pending").innerHTML=p.map(a=>addCard(a,true)).join("")||'<div class="empty">لا توجد إضافات بانتظار المراجعة حالياً.</div>';
+  $("done").innerHTML=d.map(a=>addCard(a,false)).join("")||'<div class="empty">لم تتم مراجعة أي إضافة بعد.</div>';
+}
+function decide(btn,id,ok){call("adminDecide",[adminToken,id,ok],btn,$("de"+id),renderAdmin)}
+document.addEventListener("keydown",e=>{if(e.key=="Enter"){
+  if(!$("login").classList.contains("hidden"))login();
+  else if(!$("p-search").classList.contains("hidden")&&document.activeElement==$("q"))doSearch();
+  else if(!$("adminLogin").classList.contains("hidden"))adminLogin();}});
+
+
+// ===== التواصل مع اللجنة =====
+$("nId").addEventListener("input",e=>e.target.value=e.target.value.replace(/\D/g,""));
+$("nPh").addEventListener("input",phoneFilter);
+function openNote(){$("noteForm").classList.remove("hidden");$("noteOk").classList.add("hidden");$("nErr").textContent="";show("note")}
+function sendNote(){
+  const d={name:$("nName").value.trim(),id:$("nId").value.trim(),phone:$("nPh").value.trim(),type:$("nType").value,text:$("nText").value.trim()};
+  const e=$("nErr");
+  if(d.name.split(/\s+/).length<4){e.textContent="يُرجى إدخال الاسم الرباعي كاملاً.";return}
+  const m=idMsg(d.id);if(m){e.textContent=m;return}
+  { const p=phoneClean(d.phone); if(!/^05\d{8}$/.test(p)&&!/^\+\d{8,15}$/.test(p)){e.textContent="يُرجى إدخال رقم جوال صحيح: 05xxxxxxxx من داخل فلسطين، أو رقم دولي يبدأ بـ +";return} d.phone=p; }
+  if(!d.type){e.textContent="يُرجى اختيار نوع الملاحظة.";return}
+  if(d.text.length<5){e.textContent="يُرجى كتابة تفاصيل الملاحظة.";return}
+  call("submitNote",[d],$("nBtn"),e,()=>{["nName","nId","nPh","nText"].forEach(x=>$(x).value="");$("nType").value="";
+    $("noteForm").classList.add("hidden");$("noteOk").classList.remove("hidden")});
+}
+let NOTES=[];
+function renderNotes(list){
+  NOTES=list;$("cNotes").textContent=list.filter(n=>n.status=="جديدة").length;
+  const cls={"جديدة":"pend","قيد المتابعة":"edit","تم الحل":"done"};
+  $("notesList").innerHTML=list.map(n=>`<div class="card"><div><span class="tag">${esc(n.type)}</span><span class="tag ${cls[n.status]||""}">${esc(n.status)}</span><span class="hint" style="float:left">#${esc(n.num)} — ${esc(n.at)}</span></div>
+    <div class="name" style="margin-top:6px">${esc(n.name)}</div>
+    <div class="grid">${fld("رقم الهوية",n.id)}<div class="f"><small>رقم الجوال</small><b><a href="tel:${esc(n.phone)}" style="color:inherit">${esc(n.phone)}</a></b></div></div>
+    <div class="note-txt">${esc(n.text)}</div>
+    ${n.by?`<div class="hint" style="margin-top:8px">تابعها: <b>${esc(n.by)}</b> — ${esc(n.upd)}${n.reply?"<br>ما تم: "+esc(n.reply):""}</div>`:""}
+    <div class="editbox"><label>تحديث الحالة</label><select id="ns${esc(n.num)}">${["جديدة","قيد المتابعة","تم الحل"].map(x=>`<option${x==n.status?" selected":""}>${x}</option>`).join("")}</select>
+    <label>ما تم (اختياري)</label><textarea id="nr${esc(n.num)}" rows="2" maxlength="1000">${esc(n.reply)}</textarea>
+    <button class="edit-btn" onclick="updNote(this,'${esc(n.num)}')">حفظ</button><div class="err" id="ne${esc(n.num)}"></div></div></div>`).join("")
+    ||'<div class="empty">لا توجد ملاحظات بعد.</div>';
+}
+function updNote(btn,num){call("adminNoteUpdate",[adminToken,num,$("ns"+num).value,$("nr"+num).value],btn,$("ne"+num),renderNotes)}
+function dlNotes(){dl("mortaja-notes",["رقم الملاحظة","الوقت","الاسم","رقم الهوية","رقم الجوال","النوع","التفاصيل","الحالة","تابعها","ما تم","وقت آخر تحديث"],
+  NOTES.map(n=>[n.num,n.at,n.name,tx(n.id),tx(n.phone),n.type,n.text,n.status,n.by,n.reply,n.upd]))}
+
+// استرجاع الجلسة بعد إعادة تحميل الصفحة
+(function(){
+  const ss=getSess(); if(!ss)return;
+  loader(true);
+  if(ss.t=="u"){
+    call("getView",[ss.token],null,null,v=>{token=ss.token;V=v;loader(false);show("view");render()},()=>{clearSess();loader(false)});
+  }else if(ss.t=="a"){
+    call("adminList",[ss.token],null,null,list=>{adminToken=ss.token;loader(false);$("adminTitle").textContent=ss.name||"";show("admin");tab(ss.tab||"adds");if((ss.tab||"adds")!="adds")renderAdmin(list)},()=>{clearSess();loader(false)});
+  }
+})();
+$("aPh").addEventListener("input",phoneFilter);
+</script>
+</body>
+</html>
