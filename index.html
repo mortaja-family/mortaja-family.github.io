@@ -458,14 +458,14 @@ function addMember(){
 // لوحة اللجنة
 function adminLogin(){
   call("adminLogin",[$("aUser").value.trim(),$("aPass").value],$("adBtn"),$("adErr"),r=>{
-    adminToken=r.token;$("aPass").value="";$("adminTitle").textContent=r.name;saveSess({t:"a",token:r.token,name:r.name,tab:"adds"});show("admin");tab("adds");renderAdmin(r.list);$("cNotes").textContent=r.newNotes||0});
+    adminToken=r.token;$("aPass").value="";$("adminTitle").textContent=r.name;saveSess({t:"a",token:r.token,name:r.name,tab:"adds"});show("admin");tab("adds",r.list);$("cNotes").textContent=r.newNotes||0});
 }
 let ADDS=[],LOG=[],STATS=null;
-function tab(t){
+function tab(t,pre){
   const ss=getSess(); if(ss&&ss.t=="a"){ss.tab=t;saveSess(ss)}
   document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t==t));
   ["adds","log","search","stats","notes"].forEach(x=>$("p-"+x).classList.toggle("hidden",x!=t));
-  if(t=="adds")call("adminList",[adminToken],null,null,renderAdmin);
+  if(t=="adds"){if(pre)renderAdmin(pre);else call("adminList",[adminToken],null,null,renderAdmin);}
   if(t=="log"){$("logList").innerHTML='<div class="empty">جاري التحميل…</div>';call("adminLog",[adminToken],null,null,renderLog);}
   if(t=="stats"){$("statsBox").innerHTML='<div class="empty">جاري التحميل…</div>';call("adminStats",[adminToken],null,null,renderStats);}
   if(t=="search")setTimeout(()=>$("q").focus(),50);
@@ -594,7 +594,7 @@ function dlNotes(){dl("mortaja-notes",["رقم الملاحظة","الوقت","�
   if(ss.t=="u"){
     call("getView",[ss.token],null,null,v=>{token=ss.token;V=v;loader(false);show("view");render()},()=>{clearSess();loader(false)});
   }else if(ss.t=="a"){
-    call("adminList",[ss.token],null,null,list=>{adminToken=ss.token;loader(false);$("adminTitle").textContent=ss.name||"";show("admin");tab(ss.tab||"adds");if((ss.tab||"adds")!="adds")renderAdmin(list)},()=>{clearSess();loader(false)});
+    call("adminList",[ss.token],null,null,list=>{adminToken=ss.token;loader(false);$("adminTitle").textContent=ss.name||"";show("admin");tab(ss.tab||"adds",list);if((ss.tab||"adds")!="adds")renderAdmin(list)},()=>{clearSess();loader(false)});
   }
 })();
 $("aPh").addEventListener("input",phoneFilter);
