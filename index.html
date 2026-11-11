@@ -111,6 +111,14 @@ textarea:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(0,
 .note-txt{background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:8px;white-space:pre-wrap;font-size:.92rem}
 .tag.done{background:#e3f4e9;color:#1a7f4b}
 .req{color:var(--warn);font-weight:800}
+.place{display:grid;gap:6px}
+.gaza{background:var(--bg);border-radius:12px;padding:2px 10px 10px;margin-top:10px}
+.gaza select{background:var(--card)}
+.modal{position:fixed;inset:0;background:rgba(11,19,34,.55);display:grid;place-items:center;z-index:60;padding:16px}
+.mbox{background:var(--card);border-radius:18px;padding:18px;max-width:440px;width:100%;max-height:85vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:10px 4px;border-bottom:1px dashed var(--line);margin:0;color:var(--ink);font-size:.95rem;cursor:pointer}
+.chk input{width:20px;height:20px;flex:none;margin-top:3px}
+.warnTxt{color:var(--warn)}
 footer{text-align:center;padding:18px 16px 28px;color:var(--muted);font-size:.85rem}
 footer .line{width:120px;height:2px;margin:0 auto 10px;background:linear-gradient(90deg,transparent,var(--sky),transparent)}
 footer b{color:var(--acc);font-weight:700}
@@ -181,7 +189,8 @@ footer b{color:var(--acc);font-weight:700}
         <label>الاسم الرباعي</label><input id="aName" placeholder="أدخل الاسم الرباعي">
         <label>تاريخ الميلاد</label><input type="date" id="aDob">
         <label>الحالة الاجتماعية</label><select id="aSt"></select>
-        <label>مكان الإقامة <span class="req">*</span></label><select id="aRes" onchange="phoneMode($('aPh'),$('aPhH'),this.value)"></select>
+        <label>مكان الإقامة <span class="req">*</span></label><select id="aRes" onchange="phoneMode($('aPh'),$('aPhH'),this.value);$('aGz').classList.toggle('hidden',this.value!=INSIDE)"></select>
+        <div id="aGz" class="gaza hidden"></div>
         <label>رقم الهاتف المحمول <span class="hint">(إجباري لمن هم 18 عاماً فأكثر)</span></label><input id="aPh" inputmode="tel" dir="ltr" maxlength="10" placeholder="059xxxxxxx">
         <div class="hint" id="aPhH">اختر مكان الإقامة أولاً</div>
         <button id="addBtn" onclick="addMember()">إرسال للاعتماد</button>
@@ -311,9 +320,47 @@ function phoneMode(inp,hint,res){if(!inp)return;const out=res==OUTSIDE;
   if(hint)hint.textContent=out?"رقم دولي يبدأ بـ + أو 00 ثم مفتاح الدولة":res==INSIDE?"10 أرقام ويبدأ بـ 05":"اختر مكان الإقامة أولاً";}
 const phoneFilter=e=>{e.target.value=e.target.value.replace(/[^\d+]/g,"").replace(/(?!^)\+/g,"")};
 const resOpts=v=>'<option value="">— اختر —</option>'+(V?V.residences:[]).map(x=>`<option${x==v?" selected":""}>${esc(x)}</option>`).join("");
+// ===== قائمة الأحياء: المحافظة ← المدينة ← الحي =====
+const NOT_DISP="غير نازح";
+let PL=null, plWait=[];
+function loadPlaces(cb){ if(PL){cb&&cb();return} if(cb)plWait.push(cb); if(plWait.length>1)return;
+  call("getPlaces",[],null,null,r=>{PL=r||[];const w=plWait;plWait=[];w.forEach(f=>f())},()=>{plWait=[]}); }
+const opt=(v,l,sel)=>`<option value="${esc(v)}"${sel?" selected":""}>${esc(l)}</option>`;
+// يبني 3 قوائم متسلسلة. withNot: يضيف خيار «غير نازح» في أول قائمة المحافظات
+function placeHTML(px,val,withNot){
+  const [g,c,p]=(val&&val!=NOT_DISP?val.split(" / "):["","",""]);
+  const G=(PL||[]).find(x=>x.g==g), C=G&&G.c.find(x=>x.n==c);
+  const gO=opt("",withNot?"— اختر —":"— المحافظة —",!val)+(withNot?opt(NOT_DISP,"غير نازح (في مكان إقامتي الأصلي)",val==NOT_DISP):"")+(PL||[]).map(x=>opt(x.g,x.g,x.g==g)).join("");
+  const cO=opt("","— المدينة —",!c)+(G?G.c.map(x=>opt(x.n,x.n,x.n==c)).join(""):"");
+  const pO=opt("","— الحي —",!p)+(C?C.p.map(x=>opt(x,x,x==p)).join(""):"");
+  const hideCP=!G;
+  return `<div class="place"><select id="${px}g" onchange="plChange('${px}',1)">${gO}</select>
+   <select id="${px}c" class="${hideCP?"hidden":""}" onchange="plChange('${px}',2)">${cO}</select>
+   <select id="${px}p" class="${hideCP?"hidden":""}">${pO}</select></div>`;
+}
+function plChange(px,lvl){
+  const g=$(px+"g").value, G=(PL||[]).find(x=>x.g==g);
+  if(lvl==1){ $(px+"c").innerHTML=opt("","— المدينة —",1)+(G?G.c.map(x=>opt(x.n,x.n)).join(""):""); }
+  const C=G&&G.c.find(x=>x.n==$(px+"c").value);
+  $(px+"p").innerHTML=opt("","— الحي —",1)+(C?C.p.map(x=>opt(x,x)).join(""):"");
+  $(px+"c").classList.toggle("hidden",!G); $(px+"p").classList.toggle("hidden",!G);
+}
+// القيمة: "المحافظة / المدينة / الحي" أو «غير نازح» أو "" إذا لم تكتمل
+function placeVal(px){ const g=$(px+"g").value; if(g==NOT_DISP)return NOT_DISP;
+  const c=$(px+"c").value,p=$(px+"p").value; return g&&c&&p?`${g} / ${c} / ${p}`:""; }
+// قسم الإقامة الأصلية والنزوح (يظهر فقط لمن هو داخل غزة)
+function gazaBlock(id,q){ return `<div id="gz${id}" class="gaza${q.res==INSIDE?"":" hidden"}">
+   <label>مكان الإقامة الأصلي <span class="req">*</span></label>${placeHTML("o"+id,q.orig,false)}
+   <label>مكان النزوح الحالي <span class="req">*</span></label>${placeHTML("d"+id,q.disp,true)}</div>`; }
+function resChange(id,sel){ phoneMode($("ph"+id),$("phh"+id),sel.value); const z=$("gz"+id); if(z)z.classList.toggle("hidden",sel.value!=INSIDE); }
+function resData(id){ const res=$("rs"+id).value; if(res!=INSIDE)return{res,orig:"",disp:""};
+  return {res,orig:placeVal("o"+id),disp:placeVal("d"+id)}; }
+function resMsg(d){ if(!d.res)return"يُرجى اختيار مكان الإقامة."; if(d.res!=INSIDE)return"";
+  if(!d.orig)return"يُرجى اختيار مكان الإقامة الأصلي (المحافظة والمدينة والحي)."; if(!d.disp)return"يُرجى اختيار مكان النزوح الحالي، أو «غير نازح»."; return""; }
 function editFields(q){
   return `<button class="edit-btn" id="eb${q.id}" onclick="openEdit('${q.id}')">تعديل البيانات</button><div class="editbox hidden" id="ebox${q.id}"><label>الحالة الاجتماعية</label><select id="st${q.id}">${stOpts(q.st)}</select>
-   <label>مكان الإقامة <span class="req">*</span></label><select id="rs${q.id}" onchange="phoneMode($('ph${q.id}'),$('phh${q.id}'),this.value)">${resOpts(q.res)}</select>
+   <label>مكان الإقامة <span class="req">*</span></label><select id="rs${q.id}" onchange="resChange('${q.id}',this)">${resOpts(q.res)}</select>
+   ${gazaBlock(q.id,q)}
    <label>رقم الهاتف المحمول${q.minor?" (اختياري)":" <span class=\"req\">*</span>"}</label><input id="ph${q.id}" inputmode="tel" dir="ltr" maxlength="${q.res==OUTSIDE?17:10}" placeholder="${q.res==OUTSIDE?"+905xxxxxxxxx":"059xxxxxxx"}" value="${esc(q.phone)}" oninput="phoneFilter(event)">
    <div class="hint" id="phh${q.id}">${q.res==OUTSIDE?"رقم دولي يبدأ بـ + أو 00 ثم مفتاح الدولة":q.res==INSIDE?"10 أرقام ويبدأ بـ 05":"اختر مكان الإقامة أولاً"}</div>
    <button id="sv${q.id}" onclick="save('${q.id}')">حفظ التعديلات</button>
@@ -324,7 +371,7 @@ function card(q,isMe){
   let body=`<div class="phead"><div class="av${q.g=="انثى"?" fem":""}">${esc((q.n||"؟").trim()[0])}</div>
     <div><div>${tags}</div><div class="name">${esc(q.n)}</div></div></div>
     <div class="grid">${fld("رقم الهوية",q.id)}${fld("الجنس",q.g)}`;
-  body+=fld("تاريخ الميلاد",q.dob)+fld("الحالة الاجتماعية",q.st)+fld("مكان الإقامة",q.res||"غير محدد")+(q.editable?fld("رقم الجوال",q.phone||"غير مسجّل"):"")+`</div>`;
+  body+=fld("تاريخ الميلاد",q.dob)+fld("الحالة الاجتماعية",q.st)+fld("مكان الإقامة",q.res||"غير محدد")+(q.res==INSIDE?fld("الإقامة الأصلية",q.orig||"غير محدد")+fld("مكان النزوح",q.disp||"غير محدد"):"")+(q.editable?fld("رقم الجوال",q.phone||"غير مسجّل"):"")+`</div>`;
   if(isMe&&q.editable&&q.missing) body+=`<div class="note"><b>يُرجى إكمال بياناتك:</b> رقم الجوال ومكان الإقامة مطلوبان.</div>`;
   if(q.editable) body+=editFields(q);
   else{
@@ -334,6 +381,7 @@ function card(q,isMe){
 }
 function openEdit(id){$("eb"+id).classList.add("hidden");$("ebox"+id).classList.remove("hidden")}
 function render(){
+  if(!PL){loadPlaces(()=>render());}
   $("meCard").innerHTML=card(V.me,true);
   if(V.me.editable&&V.me.missing)openEdit(V.me.id);
   $("rel").innerHTML=V.rels.map(q=>card(q)).join("")||'<div class="hint">لا يوجد أفراد مرتبطون.</div>';
@@ -344,31 +392,52 @@ function render(){
   $("sib").innerHTML=V.sibs.map(q=>card(q)).join("");
   $("addBox").classList.toggle("hidden",!V.head);
   $("aSt").innerHTML=stOpts("اعزب");$("aRes").innerHTML=resOpts("");phoneMode($("aPh"),$("aPhH"),"");
+  $("aGz").innerHTML=`<label>مكان الإقامة الأصلي <span class="req">*</span></label>${placeHTML("ao","",false)}<label>مكان النزوح الحالي <span class="req">*</span></label>${placeHTML("ad","",true)}`;$("aGz").classList.add("hidden");
 }
 function save(id){
-  const data={st:$("st"+id).value,phone:$("ph"+id).value.trim(),res:$("rs"+id).value};
+  const data={st:$("st"+id).value,phone:$("ph"+id).value.trim(),...resData(id)};
   const q=[V.me,...V.rels,...V.sibs].find(x=>x.id==id);
   if(!data.phone&&q&&!q.minor){$("er"+id).textContent="رقم الجوال إجباري.";return}
-  if(!data.res){$("er"+id).textContent="يُرجى اختيار مكان الإقامة.";return}
+  const rm=resMsg(data); if(rm){$("er"+id).textContent=rm;return}
   const pm=phoneMsg(data.phone,data.res); if(pm){$("er"+id).textContent=pm;return}
   data.phone=phoneClean(data.phone);
-  const wasHead=V.head;
+  const wasHead=V.head, isMe=id==V.me.id, old={res:V.me.res||"",orig:V.me.orig||"",disp:V.me.disp||""};
   call("saveEdit",[token,id,data],$("sv"+id),$("er"+id),r=>{
     V=r.view;render();
     const ok=$("ok"+id); if(ok)ok.classList.remove("hidden");
     if(!wasHead&&V.head){$("addForm").classList.remove("hidden")}
+    // إذا غيّر الشخص مكان إقامته: اقتراح تطبيقه على أفراد أسرته
+    if(isMe&&(old.res!=data.res||old.orig!=data.orig||old.disp!=data.disp))offerFamily(old,data);
   });
+}
+function offerFamily(old,d){
+  const fam=[...V.rels,...V.sibs].filter(q=>q.editable); if(!fam.length)return;
+  const same=q=>(!q.res)||((q.res||"")==old.res&&(q.orig||"")==old.orig&&(q.disp||"")==old.disp);
+  const desc=d.res==INSIDE?`${d.res}<br><small>الأصلي: ${esc(d.orig)}<br>النزوح: ${esc(d.disp)}</small>`:esc(d.res);
+  const m=document.createElement("div");m.id="famModal";m.className="modal";
+  m.innerHTML=`<div class="mbox"><div class="card-title">تطبيق مكان الإقامة على أفراد الأسرة؟</div>
+   <div class="hint" style="margin-bottom:8px">مكان الإقامة الجديد: <b>${desc}</b></div>
+   ${fam.map(q=>{const s=same(q);return `<label class="chk"><input type="checkbox" value="${esc(q.id)}"${s?" checked":""}>
+     <span><b>${esc(q.n)}</b> <small>(${esc(q.tag)})</small>${s?"":`<br><small class="warnTxt">مكان إقامته مختلف حالياً: ${esc(q.res||"")}</small>`}
+     ${d.res==OUTSIDE&&q.phone&&/^05/.test(q.phone)?`<br><small class="warnTxt">رقم الجوال بصيغة محلية، يُرجى تحديثه لرقم دولي</small>`:""}</span></label>`}).join("")}
+   <div class="btns"><button id="famApply">تطبيق</button><button class="sec2" onclick="$('famModal').remove()">لا، شكراً</button></div>
+   <div class="err" id="famErr"></div></div>`;
+  document.body.appendChild(m);
+  $("famApply").onclick=()=>{const ids=[...m.querySelectorAll("input:checked")].map(x=>x.value);
+    if(!ids.length){m.remove();return}
+    call("applyResidence",[token,ids,{res:d.res,orig:d.orig,disp:d.disp}],$("famApply"),$("famErr"),r=>{V=r.view;render();m.remove();});};
 }
 function toggleAdd(){$("addForm").classList.toggle("hidden")}
 function addMember(){
-  const d={rel:$("aRel").value,id:$("aId").value.trim(),name:$("aName").value.trim(),dob:$("aDob").value,st:$("aSt").value,phone:$("aPh").value.trim(),res:$("aRes").value};
+  const d={rel:$("aRel").value,id:$("aId").value.trim(),name:$("aName").value.trim(),dob:$("aDob").value,st:$("aSt").value,phone:$("aPh").value.trim(),res:$("aRes").value,orig:"",disp:""};
+  if(d.res==INSIDE){d.orig=placeVal("ao");d.disp=placeVal("ad");}
   const e=$("aErr"), m=idMsg(d.id);
   if(m){e.textContent=m;return}
   if(d.name.split(/\s+/).length<4){e.textContent="يُرجى إدخال الاسم الرباعي كاملاً.";return}
   if(!d.dob){e.textContent="يُرجى إدخال تاريخ الميلاد.";return}
   const adult=(new Date()-new Date(d.dob))/31557600000>=18;
   if(!d.phone&&adult){e.textContent="رقم الجوال إجباري لمن هم 18 عاماً فأكثر.";return}
-  if(!d.res){e.textContent="يُرجى اختيار مكان الإقامة.";return}
+  { const rm=resMsg(d); if(rm){e.textContent=rm;return} }
   const pm=phoneMsg(d.phone,d.res); if(pm){e.textContent=pm;return}
   d.phone=phoneClean(d.phone);
   call("addMember",[token,d],$("addBtn"),e,r=>{
@@ -406,7 +475,7 @@ function doSearch(){
     $("results").innerHTML=list.map(p=>`<div class="card"><div class="phead"><div class="av${p.g=="انثى"?" fem":""}">${esc((p.n||"؟")[0])}</div>
      <div><div>${p.head?'<span class="tag">رب أسرة</span>':''}${p.minor?'<span class="tag no">دون 18 عاماً</span>':''}${p.approval!="معتمد"?'<span class="tag pend">'+esc(p.approval)+'</span>':''}</div>
      <div class="name">${esc(p.n)}</div></div></div>
-     <div class="grid">${fld("رقم الهوية",p.id)}${fld("تاريخ الميلاد",p.dob)}${fld("الحالة الاجتماعية",p.st+(p.st!=p.st0?" (كانت "+p.st0+")":""))}${fld("رقم الجوال",p.phone)}${fld("مكان الإقامة",p.res||"غير محدد")}
+     <div class="grid">${fld("رقم الهوية",p.id)}${fld("تاريخ الميلاد",p.dob)}${fld("الحالة الاجتماعية",p.st+(p.st!=p.st0?" (كانت "+p.st0+")":""))}${fld("رقم الجوال",p.phone)}${fld("مكان الإقامة",p.res||"غير محدد")}${p.res==INSIDE?fld("الإقامة الأصلية",p.orig||"غير محدد")+fld("مكان النزوح",p.disp||"غير محدد"):""}
      ${fld("آخر دخول",p.lastLogin||"لم يدخل بعد")}${fld("آخر تعديل",p.editAt?p.editAt+" — "+p.editBy:"")}</div>
      <div class="fam">${p.family.map(f=>`<span><small>${esc(f.rel)}</small>${esc(f.n)}</span>`).join("")||'<span class="hint">لا يوجد أفراد مرتبطون</span>'}</div></div>`).join("")
      ||'<div class="empty">لا توجد نتائج.</div>';
@@ -427,8 +496,14 @@ function renderStats(s){
     <div class="row" style="margin-top:10px"><span>أفراد لديهم رقم جوال</span><span>${s.withPhone}</span></div>
     <div class="row"><span>مقيمون داخل غزة - فلسطين</span><span>${s.inside}</span></div>
     <div class="row"><span>مقيمون خارج فلسطين</span><span>${s.outside}</span></div>
+    <div class="row"><span>نازحون حالياً</span><span>${s.displaced}</span></div>
+    <div class="row"><span>غير نازحين (داخل غزة)</span><span>${s.notDisplaced}</span></div>
     <div class="row"><span>عدد التعديلات</span><span>${s.edits}</span></div>
     <div class="row"><span>إضافات بانتظار المراجعة</span><span>${s.pending}</span></div></div>
+   <div class="card"><div class="card-title">حسب محافظة الإقامة الأصلية</div>
+    ${s.byOrig.length?s.byOrig.map(x=>`<div class="row"><span>${esc(x[0])}</span><span>${x[1]}</span></div>`).join(""):'<div class="hint">لا توجد بيانات بعد.</div>'}</div>
+   <div class="card"><div class="card-title">النازحون حسب محافظة النزوح</div>
+    ${s.byDisp.length?s.byDisp.map(x=>`<div class="row"><span>${esc(x[0])}</span><span>${x[1]}</span></div>`).join(""):'<div class="hint">لا توجد بيانات بعد.</div>'}</div>
    <div class="card"><div class="toolbar" style="margin:0"><div class="card-title" style="margin:0">أرباب أسر لم يدخلوا بعد (${s.headsMissing.length})</div>
     <button class="dl" onclick="dlMissing()">تنزيل Excel</button></div>
     <div class="miss">${s.headsMissing.map(h=>`<div><span>${esc(h.n)}</span><span>${esc(h.id)}</span></div>`).join("")||'<div class="hint">جميع أرباب الأسر دخلوا 🎉</div>'}</div></div>`;
