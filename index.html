@@ -32,6 +32,8 @@ button{width:100%;margin-top:16px;padding:13px;border:0;border-radius:12px;backg
 button:hover{box-shadow:0 8px 20px rgba(11,42,85,.35)}
 button:active{transform:translateY(1px)}
 button:disabled{opacity:.6;cursor:wait}
+button.done{background:linear-gradient(160deg,#1f9d55,#137a3f);box-shadow:0 6px 16px rgba(19,122,63,.28);margin-top:22px}
+button.done:hover{box-shadow:0 8px 20px rgba(19,122,63,.38)}
 button.sec2{background:var(--card);border:1px solid var(--warn);color:var(--warn);box-shadow:none}
 .btns{display:flex;gap:10px}.btns button{margin-top:12px}
 .err{color:var(--warn);font-size:.9rem;margin-top:8px;min-height:1.2em}
@@ -133,6 +135,7 @@ footer b{color:var(--acc);font-weight:700}
 <div class="wrap">
 
   <div id="login" class="card main">
+    <div id="bye" class="hidden"><div class="ok" style="margin:0 0 14px">شكراً لكم، تم حفظ بياناتكم وتسجيل خروجكم بنجاح. يمكنكم الدخول مرة أخرى في أي وقت لتحديث البيانات.</div></div>
     <div class="card-title">تسجيل الدخول</div>
     <div class="hint">أدخل رقم هويتك وسنة ميلادك لعرض بياناتك وبيانات أسرتك.</div>
     <label for="id">رقم الهوية</label>
@@ -156,7 +159,7 @@ footer b{color:var(--acc);font-weight:700}
     <div id="noteForm">
       <label>الاسم الرباعي</label><input id="nName" placeholder="أدخل الاسم الرباعي">
       <label>رقم الهوية</label><input id="nId" inputmode="numeric" maxlength="9" placeholder="أدخل رقم الهوية المكوّن من 9 أرقام">
-      <label>رقم الجوال</label><input id="nPh" inputmode="tel" dir="ltr" maxlength="17" placeholder="059xxxxxxx أو +905xxxxxxxxx">
+      <label>رقم الجوال <span class="hint">(يُرجى إدخال رقم مفعّل عليه واتساب)</span></label><input id="nPh" inputmode="tel" dir="ltr" maxlength="17" placeholder="059xxxxxxx أو +905xxxxxxxxx">
       <div class="hint">من داخل فلسطين: 05xxxxxxxx — من الخارج: رقم دولي يبدأ بـ +</div>
       <label>نوع الملاحظة</label>
       <select id="nType"><option value="">— اختر —</option><option>بيانات خاطئة</option><option>فرد ناقص</option><option>مشكلة في الدخول</option><option>أخرى</option></select>
@@ -191,13 +194,14 @@ footer b{color:var(--acc);font-weight:700}
         <label>الحالة الاجتماعية</label><select id="aSt"></select>
         <label>مكان الإقامة <span class="req">*</span></label><select id="aRes" onchange="phoneMode($('aPh'),$('aPhH'),this.value);$('aGz').classList.toggle('hidden',this.value!=INSIDE)"></select>
         <div id="aGz" class="gaza hidden"></div>
-        <label>رقم الهاتف المحمول <span class="hint">(إجباري لمن هم 18 عاماً فأكثر)</span></label><input id="aPh" inputmode="tel" dir="ltr" maxlength="10" placeholder="059xxxxxxx">
+        <label>رقم الهاتف المحمول <span class="hint">(إجباري لمن هم 18 عاماً فأكثر، ويُرجى إدخال رقم مفعّل عليه واتساب)</span></label><input id="aPh" inputmode="tel" dir="ltr" maxlength="10" placeholder="059xxxxxxx">
         <div class="hint" id="aPhH">اختر مكان الإقامة أولاً</div>
         <button id="addBtn" onclick="addMember()">إرسال للاعتماد</button>
         <div class="err" id="aErr"></div>
       </div>
     </div>
-    <button class="link" onclick="logout()">تسجيل الخروج</button>
+    <button class="done" id="doneBtn" onclick="finish()">انتهاء التعديلات وتسجيل الخروج</button>
+    <div class="err" id="doneErr"></div>
   </div>
 
   <div id="adminLogin" class="card main hidden">
@@ -299,12 +303,17 @@ function loader(on){$("loader").classList.toggle("hidden",!on)}
 function alertBox(m){$("err").textContent=m}
 
 function login(){
+  $("bye").classList.add("hidden");
   const id=$("id").value.trim(), yr=$("yr").value.trim(), m=idMsg(id);
   if(m){$("err").textContent=m;return}
   if(!/^\d{4}$/.test(yr)){$("err").textContent="يُرجى إدخال سنة الميلاد بأربعة أرقام.";return}
   call("login",[id,yr],$("loginBtn"),$("err"),r=>{token=r.token;V=r.view;saveSess({t:"u",token});show("view");render()});
 }
-function logout(){clearSess();token=null;V=null;$("id").value="";$("yr").value="";show("login")}
+function logout(){clearSess();token=null;V=null;$("id").value="";$("yr").value="";$("doneErr").textContent="";$("bye").classList.add("hidden");show("login")}
+let finTry=0;
+function finish(){const open=[...document.querySelectorAll("#view .editbox")].filter(b=>!b.classList.contains("hidden"));
+  if(open.length&&!finTry){finTry=1;$("doneErr").textContent="توجد بيانات مفتوحة للتعديل لم تُحفظ بعد. يُرجى الضغط على «حفظ التعديلات» أولاً، أو اضغط الزر مرة أخرى للخروج دون حفظ.";open[0].scrollIntoView({behavior:"smooth",block:"center"});return}
+  finTry=0;logout();$("bye").classList.remove("hidden")}
 
 const stOpts=v=>V.statuses.map(x=>`<option${x==v?" selected":""}>${esc(x)}</option>`).join("");
 const fld=(k,v)=>`<div class="f"><small>${k}</small><b dir="auto">${esc(v)||"—"}</b></div>`;
@@ -361,7 +370,7 @@ function editFields(q){
   return `<button class="edit-btn" id="eb${q.id}" onclick="openEdit('${q.id}')">تعديل البيانات</button><div class="editbox hidden" id="ebox${q.id}"><label>الحالة الاجتماعية</label><select id="st${q.id}">${stOpts(q.st)}</select>
    <label>مكان الإقامة <span class="req">*</span></label><select id="rs${q.id}" onchange="resChange('${q.id}',this)">${resOpts(q.res)}</select>
    ${gazaBlock(q.id,q)}
-   <label>رقم الهاتف المحمول${q.minor?" (اختياري)":" <span class=\"req\">*</span>"}</label><input id="ph${q.id}" inputmode="tel" dir="ltr" maxlength="${q.res==OUTSIDE?17:10}" placeholder="${q.res==OUTSIDE?"+905xxxxxxxxx":"059xxxxxxx"}" value="${esc(q.phone)}" oninput="phoneFilter(event)">
+   <label>رقم الهاتف المحمول${q.minor?" (اختياري)":" <span class=\"req\">*</span>"} <span class="hint">(يُرجى إدخال رقم مفعّل عليه واتساب)</span></label><input id="ph${q.id}" inputmode="tel" dir="ltr" maxlength="${q.res==OUTSIDE?17:10}" placeholder="${q.res==OUTSIDE?"+905xxxxxxxxx":"059xxxxxxx"}" value="${esc(q.phone)}" oninput="phoneFilter(event)">
    <div class="hint" id="phh${q.id}">${q.res==OUTSIDE?"رقم دولي يبدأ بـ + أو 00 ثم مفتاح الدولة":q.res==INSIDE?"10 أرقام ويبدأ بـ 05":"اختر مكان الإقامة أولاً"}</div>
    <button id="sv${q.id}" onclick="save('${q.id}')">حفظ التعديلات</button>
    <div class="err" id="er${q.id}"></div></div><div class="ok hidden" id="ok${q.id}">تم حفظ البيانات بنجاح</div>`}
@@ -379,7 +388,7 @@ function card(q,isMe){
   }
   return `<div class="card${isMe?" me":""}">${body}</div>`;
 }
-function openEdit(id){$("eb"+id).classList.add("hidden");$("ebox"+id).classList.remove("hidden")}
+function openEdit(id){finTry=0;$("doneErr").textContent="";$("eb"+id).classList.add("hidden");$("ebox"+id).classList.remove("hidden")}
 function render(){
   if(!PL){loadPlaces(()=>render());}
   $("meCard").innerHTML=card(V.me,true);
@@ -394,7 +403,7 @@ function render(){
   $("aSt").innerHTML=stOpts("اعزب");$("aRes").innerHTML=resOpts("");phoneMode($("aPh"),$("aPhH"),"");
   $("aGz").innerHTML=`<label>مكان الإقامة الأصلي <span class="req">*</span></label>${placeHTML("ao","",false)}<label>مكان النزوح الحالي <span class="req">*</span></label>${placeHTML("ad","",true)}`;$("aGz").classList.add("hidden");
 }
-function save(id){
+function save(id){finTry=0;$("doneErr").textContent="";
   const data={st:$("st"+id).value,phone:$("ph"+id).value.trim(),...resData(id)};
   const q=[V.me,...V.rels,...V.sibs].find(x=>x.id==id);
   if(!data.phone&&q&&!q.minor){$("er"+id).textContent="رقم الجوال إجباري.";return}
