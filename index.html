@@ -187,9 +187,10 @@ footer b{color:var(--acc);font-weight:700}
         <div class="card-title">إضافة فرد جديد</div>
         <div class="note">تُعرض الإضافة على لجنة النسب، ولا تُعتمد إلا بعد موافقتها.</div>
         <label>صلة القرابة</label>
-        <select id="aRel"><option value="زوجة">زوجة</option><option value="ابن">ابن</option><option value="ابنة">ابنة</option></select>
+        <select id="aRel" onchange="relName()"><option value="زوجة">زوجة</option><option value="ابن">ابن</option><option value="ابنة">ابنة</option></select>
         <label>رقم الهوية</label><input id="aId" inputmode="numeric" maxlength="9" placeholder="أدخل رقم الهوية المكوّن من 9 أرقام">
-        <label>الاسم الرباعي</label><input id="aName" placeholder="أدخل الاسم الرباعي">
+        <label id="aNameL">الاسم الرباعي</label><input id="aName" placeholder="أدخل الاسم الرباعي" oninput="relName()">
+        <div class="hint" id="aNameH"></div>
         <label>تاريخ الميلاد</label><input type="date" id="aDob">
         <label>الحالة الاجتماعية</label><select id="aSt"></select>
         <label>مكان الإقامة <span class="req">*</span></label><select id="aRes" onchange="phoneMode($('aPh'),$('aPhH'),this.value);$('aGz').classList.toggle('hidden',this.value!=INSIDE)"></select>
@@ -436,13 +437,23 @@ function offerFamily(old,d){
     if(!ids.length){m.remove();return}
     call("applyResidence",[token,ids,{res:d.res,orig:d.orig,disp:d.disp}],$("famApply"),$("famErr"),r=>{V=r.view;render();m.remove();});};
 }
-function toggleAdd(){$("addForm").classList.toggle("hidden")}
+function toggleAdd(){$("addForm").classList.toggle("hidden");relName()}
+// للابن والابنة يكفي الاسم الأول، ويُكمل الاسم من اسم الأب (نفس طريقة الخادم)
+function nameParts(n){const t=String(n||"").trim().split(/\s+/).filter(Boolean),o=[];
+  for(let i=0;i<t.length;i++){if(["عبد","ابو","أبو"].includes(t[i])&&i+1<t.length){o.push(t[i]+" "+t[i+1]);i++}
+  else if(["الدين","الله"].includes(t[i])&&o.length)o[o.length-1]+=" "+t[i];else o.push(t[i])}return o}
+function relName(){const child=$("aRel").value!="زوجة",inp=$("aName"),h=$("aNameH");
+  $("aNameL").textContent=child?"الاسم الأول":"الاسم الرباعي";inp.placeholder=child?"أدخل الاسم الأول فقط":"أدخل الاسم الرباعي";
+  if(!child){h.textContent="";return}
+  const f=nameParts(V&&V.me?V.me.n:""),first=nameParts(inp.value).join(" ");
+  h.textContent=first&&f.length>=3?"سيُسجَّل الاسم: "+[first,f[0],f[1],f[f.length-1]].join(" "):"يُكمل الاسم تلقائياً من اسم الأب.";}
 function addMember(){
   const d={rel:$("aRel").value,id:$("aId").value.trim(),name:$("aName").value.trim(),dob:$("aDob").value,st:$("aSt").value,phone:$("aPh").value.trim(),res:$("aRes").value,orig:"",disp:""};
   if(d.res==INSIDE){d.orig=placeVal("ao");d.disp=placeVal("ad");}
   const e=$("aErr"), m=idMsg(d.id);
   if(m){e.textContent=m;return}
-  if(d.name.split(/\s+/).length<4){e.textContent="يُرجى إدخال الاسم الرباعي كاملاً.";return}
+  if(d.rel=="زوجة"&&d.name.split(/\s+/).length<4){e.textContent="يُرجى إدخال الاسم الرباعي كاملاً.";return}
+  if(d.rel!="زوجة"&&nameParts(d.name).length!=1){e.textContent="يُرجى إدخال الاسم الأول فقط.";return}
   if(!d.dob){e.textContent="يُرجى إدخال تاريخ الميلاد.";return}
   const adult=(new Date()-new Date(d.dob))/31557600000>=18;
   if(!d.phone&&adult){e.textContent="رقم الجوال إجباري لمن هم 18 عاماً فأكثر.";return}
