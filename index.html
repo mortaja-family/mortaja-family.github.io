@@ -161,6 +161,7 @@ footer b{color:var(--acc);font-weight:700}
       <label>رقم الهوية</label><input id="nId" inputmode="numeric" maxlength="9" placeholder="أدخل رقم الهوية المكوّن من 9 أرقام">
       <label>رقم الجوال <span class="hint">(يُرجى إدخال رقم مفعّل عليه واتساب)</span></label><input id="nPh" inputmode="tel" dir="ltr" maxlength="17" placeholder="059xxxxxxx أو +905xxxxxxxxx">
       <div class="hint">من داخل فلسطين: 05xxxxxxxx — من الخارج: رقم دولي يبدأ بـ +</div>
+      <label>تاريخ الميلاد <span class="hint">(كما في الهوية)</span></label><input id="nDob" type="date" min="1900-01-01">
       <label>نوع الملاحظة</label>
       <select id="nType"><option value="">— اختر —</option><option>بيانات خاطئة</option><option>فرد ناقص</option><option>مشكلة في الدخول</option><option>أخرى</option></select>
       <label>التفاصيل</label><textarea id="nText" rows="5" maxlength="1000" placeholder="اكتب الملاحظة بوضوح، مثل: اسم الشخص، ورقم هويته، والخطأ الموجود."></textarea>
@@ -570,14 +571,15 @@ $("nId").addEventListener("input",e=>e.target.value=e.target.value.replace(/\D/g
 $("nPh").addEventListener("input",phoneFilter);
 function openNote(){$("noteForm").classList.remove("hidden");$("noteOk").classList.add("hidden");$("nErr").textContent="";show("note")}
 function sendNote(){
-  const d={name:$("nName").value.trim(),id:$("nId").value.trim(),phone:$("nPh").value.trim(),type:$("nType").value,text:$("nText").value.trim()};
+  const d={name:$("nName").value.trim(),id:$("nId").value.trim(),phone:$("nPh").value.trim(),type:$("nType").value,text:$("nText").value.trim(),dob:$("nDob").value};
   const e=$("nErr");
   if(d.name.split(/\s+/).length<4){e.textContent="يُرجى إدخال الاسم الرباعي كاملاً.";return}
   const m=idMsg(d.id);if(m){e.textContent=m;return}
   { const p=phoneClean(d.phone); if(!/^05\d{8}$/.test(p)&&!/^\+\d{8,15}$/.test(p)){e.textContent="يُرجى إدخال رقم جوال صحيح: 05xxxxxxxx من داخل فلسطين، أو رقم دولي يبدأ بـ +";return} d.phone=p; }
   if(!d.type){e.textContent="يُرجى اختيار نوع الملاحظة.";return}
+  if(!d.dob&&d.type!="أخرى"){e.textContent="يُرجى إدخال تاريخ الميلاد.";return}
   if(d.text.length<5){e.textContent="يُرجى كتابة تفاصيل الملاحظة.";return}
-  call("submitNote",[d],$("nBtn"),e,()=>{["nName","nId","nPh","nText"].forEach(x=>$(x).value="");$("nType").value="";
+  call("submitNote",[d],$("nBtn"),e,()=>{["nName","nId","nPh","nText","nDob"].forEach(x=>$(x).value="");$("nType").value="";
     $("noteForm").classList.add("hidden");$("noteOk").classList.remove("hidden")});
 }
 let NOTES=[];
@@ -586,7 +588,7 @@ function renderNotes(list){
   const cls={"جديدة":"pend","قيد المتابعة":"edit","تم الحل":"done"};
   $("notesList").innerHTML=list.map(n=>`<div class="card"><div><span class="tag">${esc(n.type)}</span><span class="tag ${cls[n.status]||""}">${esc(n.status)}</span><span class="hint" style="float:left">#${esc(n.num)} — ${esc(n.at)}</span></div>
     <div class="name" style="margin-top:6px">${esc(n.name)}</div>
-    <div class="grid">${fld("رقم الهوية",n.id)}<div class="f"><small>رقم الجوال</small><b><a href="tel:${esc(n.phone)}" style="color:inherit">${esc(n.phone)}</a></b></div></div>
+    <div class="grid">${fld("رقم الهوية",n.id)}<div class="f"><small>رقم الجوال</small><b><a href="tel:${esc(n.phone)}" style="color:inherit">${esc(n.phone)}</a></b></div>${n.dob?fld("تاريخ الميلاد",n.dob):""}</div>
     <div class="note-txt">${esc(n.text)}</div>
     ${n.by?`<div class="hint" style="margin-top:8px">تابعها: <b>${esc(n.by)}</b> — ${esc(n.upd)}${n.reply?"<br>ما تم: "+esc(n.reply):""}</div>`:""}
     <div class="editbox"><label>تحديث الحالة</label><select id="ns${esc(n.num)}">${["جديدة","قيد المتابعة","تم الحل"].map(x=>`<option${x==n.status?" selected":""}>${x}</option>`).join("")}</select>
@@ -595,8 +597,8 @@ function renderNotes(list){
     ||'<div class="empty">لا توجد ملاحظات بعد.</div>';
 }
 function updNote(btn,num){call("adminNoteUpdate",[adminToken,num,$("ns"+num).value,$("nr"+num).value],btn,$("ne"+num),renderNotes)}
-function dlNotes(){dl("mortaja-notes",["رقم الملاحظة","الوقت","الاسم","رقم الهوية","رقم الجوال","النوع","التفاصيل","الحالة","تابعها","ما تم","وقت آخر تحديث"],
-  NOTES.map(n=>[n.num,n.at,n.name,tx(n.id),tx(n.phone),n.type,n.text,n.status,n.by,n.reply,n.upd]))}
+function dlNotes(){dl("mortaja-notes",["رقم الملاحظة","الوقت","الاسم","رقم الهوية","رقم الجوال","النوع","التفاصيل","الحالة","تابعها","ما تم","وقت آخر تحديث","تاريخ الميلاد"],
+  NOTES.map(n=>[n.num,n.at,n.name,tx(n.id),tx(n.phone),n.type,n.text,n.status,n.by,n.reply,n.upd,n.dob]))}
 
 // استرجاع الجلسة بعد إعادة تحميل الصفحة
 (function(){
