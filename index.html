@@ -189,6 +189,8 @@ footer b{color:var(--acc);font-weight:700}
         <div class="note">تُعرض الإضافة على لجنة النسب، ولا تُعتمد إلا بعد موافقتها.</div>
         <label>صلة القرابة</label>
         <select id="aRel" onchange="relName()"><option value="زوجة">زوجة</option><option value="ابن">ابن</option><option value="ابنة">ابنة</option></select>
+        <div id="aMomBox" class="hidden"><label>الأم</label><select id="aMom"></select></div>
+        <div class="hint" id="aMomH"></div>
         <label>رقم الهوية</label><input id="aId" inputmode="numeric" maxlength="9" placeholder="أدخل رقم الهوية المكوّن من 9 أرقام">
         <label id="aNameL">الاسم الرباعي</label><input id="aName" placeholder="أدخل الاسم الرباعي" oninput="relName()">
         <div class="hint" id="aNameH"></div>
@@ -401,7 +403,7 @@ function render(){
     :"تُعرض بيانات أفراد الأسرة للاطلاع فقط.";
   $("sibBox").classList.toggle("hidden",!V.eldest);
   $("sib").innerHTML=V.sibs.map(q=>card(q)).join("");
-  $("addBox").classList.toggle("hidden",!V.head);
+  $("addBox").classList.toggle("hidden",!V.head);$("aMom").innerHTML="";
   $("aSt").innerHTML=stOpts("اعزب");$("aRes").innerHTML=resOpts("");phoneMode($("aPh"),$("aPhH"),"");
   $("aGz").innerHTML=`<label>مكان الإقامة الأصلي <span class="req">*</span></label>${placeHTML("ao","",false)}<label>مكان النزوح الحالي <span class="req">*</span></label>${placeHTML("ad","",true)}`;$("aGz").classList.add("hidden");
 }
@@ -445,9 +447,18 @@ function nameParts(n){const t=String(n||"").trim().split(/\s+/).filter(Boolean),
   else if(["الدين","الله"].includes(t[i])&&o.length)o[o.length-1]+=" "+t[i];else o.push(t[i])}return o}
 function relName(){const child=$("aRel").value!="زوجة",inp=$("aName"),h=$("aNameH");
   $("aNameL").textContent=child?"الاسم الأول":"الاسم الرباعي";inp.placeholder=child?"أدخل الاسم الأول فقط":"أدخل الاسم الرباعي";
+  momBox(child);
   if(!child){h.textContent="";return}
   const f=nameParts(V&&V.me?V.me.n:""),first=nameParts(inp.value).join(" ");
   h.textContent=first&&f.length>=3?"سيُسجَّل الاسم: "+[first,f[0],f[1],f[f.length-1]].join(" "):"يُكمل الاسم تلقائياً من اسم الأب.";}
+// اختيار الأم: زوجة واحدة تُربط تلقائياً، وأكثر من زوجة يُطلب اختيارها
+function momBox(child){const ms=(V&&V.mothers)||[],b=$("aMomBox"),h=$("aMomH"),sel=$("aMom");
+  const lbl=m=>m.n+(m.dead?" (رحمها الله)":"");
+  b.classList.toggle("hidden",!child||ms.length<2);
+  if(!child||!ms.length){h.textContent="";return}
+  if(ms.length==1){h.textContent="سيُربط بالأم: "+lbl(ms[0]);return}
+  h.textContent="";
+  if(sel.options.length!=ms.length+1)sel.innerHTML='<option value="">اختر الأم</option>'+ms.map(m=>'<option value="'+m.id+'">'+lbl(m)+'</option>').join("");}
 function addMember(){
   const d={rel:$("aRel").value,id:$("aId").value.trim(),name:$("aName").value.trim(),dob:$("aDob").value,st:$("aSt").value,phone:$("aPh").value.trim(),res:$("aRes").value,orig:"",disp:""};
   if(d.res==INSIDE){d.orig=placeVal("ao");d.disp=placeVal("ad");}
@@ -455,6 +466,7 @@ function addMember(){
   if(m){e.textContent=m;return}
   if(d.rel=="زوجة"&&d.name.split(/\s+/).length<4){e.textContent="يُرجى إدخال الاسم الرباعي كاملاً.";return}
   if(d.rel!="زوجة"&&nameParts(d.name).length!=1){e.textContent="يُرجى إدخال الاسم الأول فقط.";return}
+  if(d.rel!="زوجة"&&((V.mothers||[]).length>1)){d.mother=$("aMom").value;if(!d.mother){e.textContent="يُرجى اختيار الأم.";return}}
   if(!d.dob){e.textContent="يُرجى إدخال تاريخ الميلاد.";return}
   const adult=(new Date()-new Date(d.dob))/31557600000>=18;
   if(!d.phone&&adult){e.textContent="رقم الجوال إجباري لمن هم 18 عاماً فأكثر.";return}
@@ -462,7 +474,7 @@ function addMember(){
   const pm=phoneMsg(d.phone,d.res); if(pm){e.textContent=pm;return}
   d.phone=phoneClean(d.phone);
   call("addMember",[token,d],$("addBtn"),e,r=>{
-    V=r.view;["aId","aName","aDob","aPh"].forEach(x=>$(x).value="");render();
+    V=r.view;["aId","aName","aDob","aPh","aMom"].forEach(x=>$(x).value="");render();
     $("addForm").classList.add("hidden");
   });
 }
