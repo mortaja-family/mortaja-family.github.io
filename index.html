@@ -539,7 +539,10 @@ function renderStats(s){
     ${s.byDisp.length?s.byDisp.map(x=>`<div class="row"><span>${esc(x[0])}</span><span>${x[1]}</span></div>`).join(""):'<div class="hint">لا توجد بيانات بعد.</div>'}</div>
    <div class="card"><div class="toolbar" style="margin:0"><div class="card-title" style="margin:0">أرباب أسر لم يدخلوا بعد (${s.headsMissing.length})</div>
     <button class="dl" onclick="dlMissing()">تنزيل Excel</button></div>
-    <div class="miss">${s.headsMissing.map(h=>`<div><span>${esc(h.n)}</span><span>${esc(h.id)}</span></div>`).join("")||'<div class="hint">جميع أرباب الأسر دخلوا 🎉</div>'}</div></div>`;
+    <div class="miss">${s.headsMissing.map(h=>`<div><span>${esc(h.n)}</span><span>${esc(h.id)}</span></div>`).join("")||'<div class="hint">جميع أرباب الأسر دخلوا 🎉</div>'}</div></div>
+   <div class="card"><div class="toolbar" style="margin:0"><div class="card-title" style="margin:0">بالغون لم يدخلوا ولم تُحدَّث بياناتهم (${s.adultsMissing.length})</div>
+    <button class="dl" onclick="dlAdultsMissing()">تنزيل Excel</button></div>
+    <div class="miss">${s.adultsMissing.map(h=>`<div><span>${esc(h.n)}</span><span>${esc(h.id)}</span></div>`).join("")||'<div class="hint">جميع البالغين دخلوا أو حُدّثت بياناتهم 🎉</div>'}</div></div>`;
 }
 // تنزيل CSV يفتح في Excel مع دعم العربية
 function dl(name,head,rows){
@@ -555,6 +558,7 @@ function dlAdds(){dl("mortaja-additions",["الصلة","الاسم","رقم ال
 function dlLog(){dl("mortaja-edit-log",["الوقت","الاسم","رقم الهوية","الحقل","القيمة القديمة","القيمة الجديدة","المعدِّل","رقم هوية المعدِّل"],
   LOG.map(l=>[l.at,l.name,tx(l.id),l.field,tx(l.from),tx(l.to),l.byName,tx(l.by)]))}
 function dlMissing(){dl("mortaja-heads-not-logged-in",["الاسم","رقم الهوية"],STATS.headsMissing.map(h=>[h.n,tx(h.id)]))}
+function dlAdultsMissing(){dl("mortaja-adults-not-updated",["الاسم","رقم الهوية","الجنس"],STATS.adultsMissing.map(h=>[h.n,tx(h.id),h.g]))}
 function adminLogout(){clearSess();adminToken=null;$("aUser").value="";show("login")}
 function addCard(a,actions){
   const st=a.status=="بانتظار الاعتماد"?'<span class="tag pend">بانتظار المراجعة</span>':a.status=="معتمد"?'<span class="tag">معتمد</span>':'<span class="tag no">مرفوض</span>';
